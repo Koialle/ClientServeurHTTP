@@ -9,17 +9,20 @@ A simple client-server based on HTTP 1.1
 
 1. Run Server File
 2. Run Navigateur File :
- * Possible hosts : localhost, localhost:1030
+ * Possible hosts : localhost, localhost:3000
  * Possible resource paths : index.txt, README.html, chat.jpg, resources/panda.jpg
 
 *TODO:*
 - [x] Minimalist server :
  - [x] Handles concurrent requests
  - [x] Test on existent browsers : Firefox, Internet Explorer
+ - [ ] Use Scanner to ask for server port
 - [ ] Minimalist client :
- - [ ] Read response body correctly
- - [ ] Save response body on local file (then display the file)
- - [ ] Improve interface (Swing -> JavaFX)
+ - [ ] Read response body correctly : fix content length of 1 when response doesn't have content
+ - [x] Save response body on local file ~~(then display the file)~~ then save the file
+ - [ ] Create "Browser" directory if doesn't exist
+ - [ ] ~~Improve interface (Swing -> JavaFX)~~ => Remove interface
  - [ ] Client error status
  - [ ] Clean code
 - [ ] Supprimer franglais de partout
+- [ ] Move all resources into resources folder
