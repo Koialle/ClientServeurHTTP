@@ -19,7 +19,7 @@ A simple client-server based on HTTP 1.1
  - [ ] Use Scanner to ask for server port
 - [ ] Minimalist client :
  - [ ] Read response body correctly : fix content length of 1 when response doesn't have content
- - [x] Save response body on local file ~~(then display the file)~~ then save the file
+ - [x] Save response body on a file in local directory (ex: Browser) ~~(then display the file)~~
  - [ ] Create "Browser" directory if doesn't exist
  - [ ] ~~Improve interface (Swing -> JavaFX)~~ => Remove interface
  - [ ] Client error status
