@@ -132,8 +132,8 @@ public class Client implements Closeable
                 }
             }
 
-            byte[] header = Arrays.copyOf(data, i - 2);
-            byte[] content = Arrays.copyOfRange(data, i, data.length);
+            byte[] header = Arrays.copyOf(data, i - 1);
+            byte[] content = Arrays.copyOfRange(data, i + 1, data.length);
             
             headerString = new String(header);
             contentString = new String(content);
@@ -152,6 +152,10 @@ public class Client implements Closeable
                 //System.out.println("write file");
                 // Write file in Output directory
                 String fileName = resource.substring(resource.lastIndexOf("/") + 1);
+                File dir = new File(System.getProperty("user.dir") + "\\Browser\\");
+                if (!dir.exists()) {
+                    dir.mkdir();
+                }
                 File file = new File(System.getProperty("user.dir") + "\\Browser\\" + fileName);
                 outputStream = new FileOutputStream(file);
                 outputStream.write(response.getContent());

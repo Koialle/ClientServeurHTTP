@@ -17,10 +17,12 @@ A simple client-server based on HTTP 1.1
  - [x] Handles concurrent requests
  - [x] Test on existent browsers : Firefox, Internet Explorer
  - [ ] Use Scanner to ask for server port
-- [ ] Minimalist client :
- - [ ] Read response body correctly : fix content length of 1 when response doesn't have content
+- [x] Minimalist client :
+ - [ ] Read response body correctly : 
+  - [x] Fix content length of 1 when response doesn't have content
+  - [ ] When receiving images
  - [x] Save response body on a file in local directory (ex: Browser) ~~(then display the file)~~
- - [ ] Create "Browser" directory if doesn't exist
+ - [x] Create "Browser" directory if doesn't exist
  - [ ] ~~Improve interface (Swing -> JavaFX)~~ => Remove interface
  - [ ] Client error status
  - [ ] Clean code

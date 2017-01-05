@@ -80,9 +80,9 @@ public class ResponseHTTP
     {
         String s = "";
         
-        s += Http.HTTP1_1 + " " + this.code + "\r\n";
-        s += Http.CONTENT_TYPE + ": " + this.contentType + "\r\n";
-        s += Http.CONTENT_LENGTH + ": " + this.content.length + "\r\n";
+        s += Http.HTTP1_1 + " " + code + "\r\n";
+        s += Http.CONTENT_TYPE + ": " + contentType + "\r\n";
+        s += Http.CONTENT_LENGTH + ": " + contentLength + "\r\n";
 
         return s;
     }

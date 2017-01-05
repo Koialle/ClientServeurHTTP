@@ -1,36 +1,23 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package http;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTextPane;
 
 /**
- *
- * @author Epulapp
+ * @author Mélanie DUBREUIL
+ * @author Ophélie EOUZAN
  */
 public class Navigateur extends javax.swing.JFrame {
     
     private Client client = null;
 
-    /**
-     * Creates new form Navigateur
-     */
     public Navigateur() {
         initComponents();
         setTitle("Client HTTP - DUBREUIL EOUZAN");
         hostField.setText("localhost:3000");
-        resourceField.setText("index.txt");
+        resourceField.setText("/resources/index.txt");
         headerRequestField.setEditable(false);
         headerResponseField.setEditable(false);
     }

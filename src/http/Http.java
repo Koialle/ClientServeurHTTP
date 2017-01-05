@@ -25,6 +25,7 @@ public class Http
         TEXT_PLAIN(new String[]{"txt"}, "text/plain"),
         TEXT_HTML(new String[]{"html"}, "text/html"),
         TEXT_CSS(new String[]{"css"}, "text/css"),
+        //TEXT_MARKDOWN(new String[]{"md"}, "text/markdown"),
         VIDEO_MP4(new String[]{"mp4, mpeg4"}, "video/mp4"),
         IMAGE_JPG(new String[]{"jpg", "jpeg"}, "image/jpg"),
         IMAGE_PNG(new String[]{"png"}, "image/png"),
