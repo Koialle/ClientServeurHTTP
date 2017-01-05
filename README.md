@@ -25,4 +25,4 @@ A simple client-server based on HTTP 1.1
  - [ ] Client error status
  - [ ] Clean code
 - [ ] Supprimer franglais de partout
-- [ ] Move all resources into resources folder
+- [x] Move all resources into resources folder
