@@ -1,20 +1,24 @@
 
 package http;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Closeable;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import http.Http.ContentType;
-import java.io.Closeable;
-import java.util.Arrays;
 
 /**
  * Class Client : Navigateur Web.
@@ -27,7 +31,9 @@ public class Client implements Closeable
     private RequestHTTP request = null;
     private ResponseHTTP response = null;
     private Socket socket = null;
-    private BufferedReader in = null;
+    //private BufferedReader in = null;
+    //private BufferedInputStream in = null;
+    private DataInputStream in = null;
     private BufferedWriter out = null;
     
     // ERROR CODES
@@ -46,11 +52,10 @@ public class Client implements Closeable
     private String resource = "";
     private String method = Http.METHOD_GET;
     
-    public Client(String hostName, String relativeResourcePath)
+    public Client(String hostName) throws Exception
     {
         try {
             this.hostName = hostName;
-            this.resource = relativeResourcePath;
             this.setSocket();
         } catch (IOException ex) {
             if (ex instanceof SocketException) {
@@ -62,10 +67,12 @@ public class Client implements Closeable
             }
             errorMsg = "Return code : " + code + " [ " + ex.getClass() + " - " + ex.getMessage() + " ] ";
             System.err.println(errorMsg);
+            
+            throw new Exception(errorMsg);
         }
     }
     
-    private void setSocket() throws IOException
+    private void setSocket() throws UnknownHostException, IOException
     {
         if (hostName.contains(":")) {
             String[] host = hostName.split(":", 2);
@@ -75,19 +82,28 @@ public class Client implements Closeable
         } else {
             socket = new Socket(hostName, 80);
         }
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        //in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        //in = new BufferedInputStream(socket.getInputStream());        
+        in = new DataInputStream(socket.getInputStream());        
         out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         changed = false;
     }
 
-//    @Override
-//    public void run()
-    public void get()
+    public void get() throws Exception
     {
+        FileOutputStream outputStream;
+
         try {
-            if (this.changed) {
-                this.setSocket();
+            this.flush();
+            if (this.resource.isEmpty()) {
+                code = ERR_FILEUNKNOWN;
+                errorMsg = "la ressource ne peut être vide";
+                throw new Exception(errorMsg);
             }
+//            if (this.changed) {
+//                this.setSocket();
+//            }
+            this.setSocket();
             this.request = new RequestHTTP(hostName, method, resource);
 
             out.write(request.toString());
@@ -96,66 +112,66 @@ public class Client implements Closeable
             // but our client only send GET request.
             out.flush();
 
-            // Read response
-            String headerString = "", contentString = "", line;
-            boolean isHeader = true;
-            //while (true) {
-            while (isHeader) {
-                line = in.readLine();
-                if (line == null) break;
-                if (line.length() == 0) {
-                    isHeader = false; // end of header
-                }
-                headerString += line + "\r\n";
-                System.out.println(line);
-                //} else {
-//                    if ((datasize = in.read(data)) == -1) {
-//                        System.out.println("break");
-//                        break;
-//                    }
-//                    
-//                    line = in.readLine();
-//                    if (line == null) {
-//                        System.out.println("break 2");
-//                        break;
-//                    }
-//                    if (line.length() == 0) {
-//                        System.out.println("break 3");
-//                        //break;
-//                    }
-//                    contentString += line + "\r\n";
-                //}
-//                System.out.println(line);
+            // Read response data
+            String headerString = "", contentString = "";
+            int dataRead , i;
+            ArrayList<Byte> datas = new ArrayList();
+            while ((dataRead = in.read()) != -1) {
+                byte b = (byte) dataRead;
+                if (b == -1) break;
+                datas.add(b);
             }
-            System.out.println(headerString);
-            if (!headerString.isEmpty()) {
-                this.response = new ResponseHTTP(headerString, contentString);
+            byte[] data = new byte[datas.size()];
+            for (i = 0; i < datas.size(); i++) {
+                data[i] = datas.get(i);
             }
-            
-            char[] data = new char[1000000];
-            int length = response.getContentLength();
-            int datasize = 0, total = 0;
-            while (total < length) {
-                //System.out.println("content lentgh :" + total);
-                if ((datasize = in.read(data)) == -1) {
+            for (i = 0; i < datas.size(); i++) {
+                if (data[i] == '\n' && data[i - 1] == '\r' && data[i - 2] == '\n' && data[i - 3] == '\r') {
+                    //System.out.println("break "+i);
                     break;
                 }
-                total += datasize;
             }
-            contentString = new String(data, 0, length);
+
+            byte[] header = Arrays.copyOf(data, i - 2);
+            byte[] content = Arrays.copyOfRange(data, i, data.length);
+            
+            headerString = new String(header);
+            contentString = new String(content);
+            
+            System.out.println(data.length);
+            System.out.println(header.length);
+            System.out.println(content.length);
+            
+            System.out.println(headerString);
             System.out.println(contentString);
-            this.response.setContent(contentString.getBytes());
-            out.flush();
+
+            if (data.length > 0) {
+                //System.out.println("response");
+                // Create response from header
+                response = new ResponseHTTP(headerString, content);
+                //System.out.println("write file");
+                // Write file in Output directory
+                String fileName = resource.substring(resource.lastIndexOf("/") + 1);
+                File file = new File(System.getProperty("user.dir") + "\\Browser\\" + fileName);
+                outputStream = new FileOutputStream(file);
+                outputStream.write(response.getContent());
+                outputStream.close();
+            }
         } catch (IOException ex) {
-//            if (ex instanceof SocketException) {
-//                code = ERR_SOCKET;
-//            } else if (ex instanceof UnknownHostException) {
-//                code = ERR_HOST;
-//            } else {
-//                code = ERR_PACKET;
-//            }
-//            errorMsg = "Return code : " + code + " [ " + ex.getClass() + " - " + ex.getMessage() + " ] ";
-//            System.err.println(errorMsg);
+            this.close();
+            if (ex instanceof SocketException) {
+                code = ERR_SOCKET;
+                changed = true;
+            } else if (ex instanceof UnknownHostException) {
+                code = ERR_HOST;
+                changed = true;
+            }
+            errorMsg = "Return code : " + code + " [ " + ex.getClass() + " - " + ex.getMessage() + " ] ";
+            System.err.println(errorMsg);
+            
+            throw new Exception(errorMsg);
+            
+        } catch (Exception ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -201,10 +217,52 @@ public class Client implements Closeable
         this.method = method;
     }
 
+    public int getCode() {
+        return code;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
+    }
+
+    /**
+     * Initalize all recurrent variables.
+     */
+    private void flush()
+    {
+        this.request = null;
+        this.response = null;
+        this.code = 0;
+        this.exception = null;
+        this.errorMsg = "";
+    }
+    
     @Override
-    public void close() throws IOException {
-        this.socket.close();
-        this.in.close();
-        this.out.close();
+    public void close()
+    {
+        System.out.println("closing client");
+        if (in != null) {
+            try {
+                in.close();
+            } catch (IOException e) {}
+        }
+        if (out != null) {
+            try {
+                out.close();
+            } catch (IOException e) {}
+        }
+        if (socket != null) {
+            try {
+                socket.close();
+            } catch (IOException e) {}
+        }
     }
 }

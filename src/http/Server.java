@@ -10,8 +10,6 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import http.Http.ContentType;
 
 /**
@@ -22,6 +20,28 @@ import http.Http.ContentType;
  */
 public class Server extends Thread
 {
+    public static void main(String[] args)
+    {
+        ServerSocket serverSocket;
+        Server server = null;
+        try {
+            serverSocket = new ServerSocket(3000);
+            System.out.println("Server is runnig...\n");
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                server = new Server(clientSocket);
+                server.start();
+            }
+        } catch (IOException ex) {
+            if (ex instanceof SocketException) {
+                System.err.println(ex.getClass() + " - " + ex.getMessage());
+            } else {
+                server.close();
+            }
+        }
+    }
+    
     private Socket clientSocket = null;
     private BufferedReader in = null;
     private DataOutputStream out = null;
@@ -32,6 +52,7 @@ public class Server extends Thread
     private static final int ERR_TIMEOUT = -3;
     private static final int ERR_FILEUNKNOWN = -4;
     private static final int ERR_HOST = -5;
+    private static final int ERR_OTHER = -6;
     private int code = 0;
     private Exception exception = null;
 
@@ -46,6 +67,7 @@ public class Server extends Thread
         System.out.println("Nouveau client connecté : " + clientSocket.getInetAddress() + ":" + clientSocket.getPort() + "\n");
 
         try {
+            this.flush();
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream())); // default buffer in size : 2048 octet
             out = new DataOutputStream(clientSocket.getOutputStream()); // default buffer out size : 512 octet
 
@@ -57,9 +79,6 @@ public class Server extends Thread
                 while ((line = in.readLine()) != null) {
                     requestString += line + "\r\n";
                     if (line.isEmpty()) {
-//                        if ((line = in.readLine()) != null) {
-//                            //requestString += "\r\n" + line + "\r\n";
-//                        }
                         break;
                     }
                 }
@@ -99,7 +118,7 @@ public class Server extends Thread
                         } else {
                             // Read resource
                             long dataSize = resourceFile.length();
-                            byte[] data = new byte[(int) dataSize + 1];
+                            byte[] data = new byte[(int) dataSize];
                             int dataReadSize;
 
                             FileInputStream fileReader = new FileInputStream(resourceFile);
@@ -114,12 +133,13 @@ public class Server extends Thread
                             response.setContentType(ContentType.getValueByExtension(extension));
                             response.setContent(data);
                         }
-                        
+                        System.out.println("header length:"+response.toString().length());
                         // Send Server GET response
                         out.writeBytes(response.toString());
                         out.writeBytes("\r\n");
                         out.write(response.getContent());
                         //out.writeBytes("\r\n");
+                        out.writeByte(-1);
                         out.flush();
                         break;
                     case Http.METHOD_POST:
@@ -142,12 +162,18 @@ public class Server extends Thread
             }
             
         } catch (IOException ex) {
-            if(ex instanceof SocketException) {
+            if (ex instanceof SocketException) {
                 // Connexion interrompue par le client
                 System.err.println("Connexion interrompue par le client");
+                code = ERR_SOCKET;
+            } else {
+                code = ERR_OTHER;
+                exception = ex;
             }
             // Traiter l'interruption de la connexion par le client
             // Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            this.close();
         }
     }
     
@@ -155,7 +181,7 @@ public class Server extends Thread
     {
         // Read resource
         long dataSize = resourceFile.length();
-        byte[] data = new byte[(int) dataSize + 1];
+        byte[] data = new byte[(int) dataSize];
         int dataReadSize;
 
         FileInputStream fileReader = new FileInputStream(resourceFile);
@@ -166,37 +192,42 @@ public class Server extends Thread
         return data;
     }
     
-    public static void main(String[] args)
+    public int getCode()
     {
-        ServerSocket serverSocket = null;
-        try {
-            serverSocket = new ServerSocket(1030);
-            System.out.println("Server is runnig...\n");
-
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-                (new Server(clientSocket)).start();
-            }
-
-        } catch (IOException ex) {
-//            if(ex instanceof BindException) {
-//                code = ERR_SOCKET;
-//            }
-//            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-//            exception = ex;
-            //serverSocket.close();
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        return code;
+    }
+    
+    public Exception getException()
+    {
+        return exception;
+    }
+    
+    /**
+     * Initalize all recurrent variables.
+     */
+    private void flush()
+    {
+        code = 0;
+        exception = null;
+    }
+    
+    public int close()
+    {
+        if (in != null) {
+            try {
+                in.close();
+            } catch (IOException e) {}
         }
+        if (out != null) {
+            try {
+                out.close();
+            } catch (IOException e) {}
+        }
+        
+        if (exception != null) {
+            System.err.println("Return code : " + code + " - " + exception.getClass() + " - " + exception.getMessage());
+        }
+
+        return code;
     }
 }
-
-/*
-Démarche :
-
-1) Faire le serveur
-2) Tester le serveur avec un navigateur web ou à Telnet => à activer sur Microsoft dans les accessoires (création de req^ètes TCP)
-3) Vendredi faire le client Web
-4) Tester le client avec note server
-
-FIN : Avoir bien avancé pour vendredi. + 2h à la rentrée en janvier.
-*/

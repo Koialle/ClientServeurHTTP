@@ -1,0 +1,25 @@
+img#image_404 {
+	height: 100vh;
+}
+
+h1 {
+	text-align: center;
+	font-size: 40px;
+}
+
+.rose {
+	color: pink;
+}
+
+.vert {
+	color: green;
+}
+
+.img_accueil {
+	height: 30vh;
+}
+
+.rotate {
+	position: absolute;
+	top: 30%;
+}

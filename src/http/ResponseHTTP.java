@@ -13,7 +13,7 @@ public class ResponseHTTP
     private byte[] content = new byte[]{};
     private int contentLength = 0;
 
-    ResponseHTTP(String headerString, String bodyString) {
+    ResponseHTTP(String headerString, byte[] content) {
         // Get response as an array
         String[] responseArray = headerString.split("\r\n");
 
@@ -22,18 +22,12 @@ public class ResponseHTTP
         this.code = responseLine[1].trim();
 
         // Check headers
-        //for (int i = 1; i <= responseArray.length; i++) 
-        //int i = 1, contentLength = 0;
-        //while (i < responseArray.length - 1 && !responseArray[i].isEmpty()) {
         for (int i = 1; i < responseArray.length; i++) {
             String[] headerArray = responseArray[i].split(":");
             String headerName = headerArray[0].trim();
             String headerValue = headerArray[1].trim();
 
             switch (headerName) {
-//                case Http.CONNECTION:
-//                    this.connection = headerValue;
-//                    break;
                 case Http.CONTENT_LENGTH:
                     this.contentLength = Integer.valueOf(headerValue);
                     break;
@@ -41,24 +35,10 @@ public class ResponseHTTP
                     this.contentType = headerValue;
                     break;
             }
-            //i++;
         }
         
         // Gestion du content de la request
-//        //byte[] data = new byte[contentLength+1];
-//        String contentString = "";
-//        i++;
-//        while (i < responseArray.length && !responseArray[i].isEmpty()) {
-//            System.out.println(responseArray[i]);
-//            contentString += responseArray[i] + "\r\n";
-//            i++;
-//        }
-        try {
-            this.content = bodyString.getBytes("UTF-8");
-            // Todo set encoding
-        } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(ResponseHTTP.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        this.content = content;
     }
 
     public ResponseHTTP()

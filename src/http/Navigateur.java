@@ -7,6 +7,9 @@
 package http;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -25,56 +28,67 @@ public class Navigateur extends javax.swing.JFrame {
      */
     public Navigateur() {
         initComponents();
-        this.setTitle("Client HTTP - DUBREUIL EOUZAN");
-        this.hostField.setText("localhost:1030");
-        this.resourceField.setText("");
-        this.headerRequestField.setEditable(false);
-        this.headerResponseField.setEditable(false);
+        setTitle("Client HTTP - DUBREUIL EOUZAN");
+        hostField.setText("localhost:3000");
+        resourceField.setText("index.txt");
+        headerRequestField.setEditable(false);
+        headerResponseField.setEditable(false);
     }
     
     private void getMethod()
     {
+        // Initialize
+        statutField.setText("Ready");
+
         // Get fields values
-        String hostName = this.hostField.getText();
-        String resourcePath = this.resourceField.getText();
+        String hostName = hostField.getText();
+        String resourcePath = resourceField.getText();
 
         if (resourcePath.isEmpty()) {
-            this.statutField.setText("Chemin vers la essource manquant");
+            statutField.setText("Chemin vers la ressource manquant");
             return;
         }
 
-        if (this.client == null) {
-            this.client = new Client(hostName, resourcePath);
-        } else {
-            this.client.setHostName(hostName);
-            this.client.setResource(resourcePath);
-        }
-
-        (new Thread(new Runnable() {
-            @Override
-            public void run() {
-                client.get();
-                
-                headerRequestField.setText(client.getRequest().toString());
-                ResponseHTTP response = client.getResponse();
-                if (response.getContentType().contains("text")) {
-                    // setText
-                    JTextPane bodyResponseField = new JTextPane();
-                    bodyResponseField.setText(new String(response.getContent()));
-                    bodyResponseField.setEditable(false);
-                    responsePane.setViewportView(bodyResponseField);
-                    if (response.getContentType().contains(Http.ContentType.TEXT_HTML.getValue())) {
-                        // setText content.getHtml()
-                    }
-                } else if (response.getContentType().contains("image")) {
-                    // setImage
-                    //BufferedImage image = ImageIO.read(null);
-                    JLabel imageLabel = new JLabel(new ImageIcon(response.getContent()));
-                    responsePane.setViewportView(imageLabel);
-                }
-                headerResponseField.setText(response.toString());
+        try {
+            if (client == null) {
+                client = new Client(hostName);
+            } else {
+                client.setHostName(hostName);
             }
-        })).start();
+            client.setResource(resourcePath);
+
+//            (new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    try {
+                        client.get();
+
+                        headerRequestField.setText(client.getRequest().toString());
+                        ResponseHTTP response = client.getResponse();
+                        if (response.getContentType().contains("text")) {
+                            // setText
+                            JTextPane bodyResponseField = new JTextPane();
+                            bodyResponseField.setText(new String(response.getContent()));
+                            bodyResponseField.setEditable(false);
+                            responsePane.setViewportView(bodyResponseField);
+                            if (response.getContentType().contains(Http.ContentType.TEXT_HTML.getValue())) {
+                                // setText content.getHtml()
+                            }
+                        } else if (response.getContentType().contains("image")) {
+                            // setImage
+                            //BufferedImage image = ImageIO.read(null);
+                            JLabel imageLabel = new JLabel(new ImageIcon(response.getContent()));
+                            responsePane.setViewportView(imageLabel);
+                        }
+                        headerResponseField.setText(response.toString());
+//                    } catch (Exception ex) {
+//                        statutField.setText(ex.getMessage());
+//                    }
+//                }
+//            })).start();
+        } catch (Exception ex) {
+            this.statutField.setText(ex.getMessage());
+        }
     }
 
     /**
