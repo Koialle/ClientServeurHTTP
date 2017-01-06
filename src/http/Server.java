@@ -131,9 +131,10 @@ public class Server extends Thread
                             String extension = resourcePathArray[resourcePathArray.length - 1];
                             
                             response.setContentType(ContentType.getValueByExtension(extension));
+                            response.setContentLength(data.length);
                             response.setContent(data);
                         }
-                        System.out.println("header length:"+response.toString().length());
+                        //System.out.println("header length:"+response.toString().length());
                         // Send Server GET response
                         out.writeBytes(response.toString());
                         out.writeBytes("\r\n");

@@ -75,6 +75,10 @@ public class ResponseHTTP
         return contentLength;
     }
 
+    public void setContentLength(int contentLength) {
+        this.contentLength = contentLength;
+    }
+
     @Override
     public String toString()
     {
